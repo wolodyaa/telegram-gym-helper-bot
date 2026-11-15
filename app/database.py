@@ -8,20 +8,24 @@ def init_db():
 
         c = db.cursor()
 
-        c.execute("""CREATE TABLE IF NOT EXISTS users(
+        c.execute("""
 
-        user_id integer,
-        name text
+        CREATE TABLE IF NOT EXISTS users(
+        user_id integer PRIMARY KEY,
+        name text,
+        surname text,
+        faculty text
+        )
         
-        )""")
+        """)
 
-def register(user_id: int, name: str):
+def register(user_id: int, name: str, surname: str, faculty: str):
 
     with sqlite3.connect(DB_PATH) as db:
 
         c = db.cursor()
 
-        c.execute("INSERT INTO users (user_id, name) VALUES (?, ?)", (user_id, name))
+        c.execute("INSERT OR REPLACE INTO users (user_id, name, surname, faculty) VALUES (?, ?, ?, ?)", (user_id, name, surname, faculty))
 
 
 def get_reg_data(user_id: int):
