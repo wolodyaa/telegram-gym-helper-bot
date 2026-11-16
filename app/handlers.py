@@ -92,7 +92,37 @@ async def confirm_yes(callback: CallbackQuery, state: FSMContext):
 async def confirm_no(callback: CallbackQuery, state: FSMContext):
     await callback.message.edit_text("Хорошо. Начнем регистрацию заново.")
 
-
     await callback.message.answer("Введите своё имя.")
     await callback.answer()
     await state.set_state(st.Register.waiting_name)
+
+
+@router.message(F.text == "⚙️Настройки")
+async def settings(message: Message):
+    await message.answer("⚙️Настройки", reply_markup=kb.settings)
+    
+
+
+@router.callback_query(F.data =="delete_data")
+async def delete_data(callback: CallbackQuery, state: FSMContext):
+    await state.set_state(st.Delete_Data.waiting_delete)
+    await callback.message.edit_text("Подтвердите удаление данных, вернуть данные невозможно.", reply_markup=kb.confirm)
+    await callback.answer()
+
+
+@router.callback_query(st.Delete_Data.waiting_delete, F.data == "confirm_yes")
+async def confirm_delete_yes(callback: CallbackQuery, state: FSMContext):
+    await callback.message.edit_text("Твои данные удалены, ты можешь приступить к новой регистрации введи команду /start.")
+
+    db.delete_data(callback.from_user.id)
+
+    await callback.answer()
+    await state.clear()
+
+
+@router.callback_query(st.Delete_Data.waiting_delete, F.data == "confirm_no")
+async def confirm_delete_no(callback: CallbackQuery, state: FSMContext):
+    await callback.message.edit_text("⚙️Настройки", reply_markup=kb.settings)
+
+    await callback.answer()
+    await state.clear()

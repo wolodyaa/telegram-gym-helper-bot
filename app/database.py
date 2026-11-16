@@ -9,23 +9,22 @@ def init_db():
         c = db.cursor()
 
         c.execute("""
-
+        
         CREATE TABLE IF NOT EXISTS users(
         user_id integer PRIMARY KEY,
         name text,
         surname text,
-        faculty text
-        )
-        
-        """)
+        study_group text
 
-def register(user_id: int, name: str, surname: str, faculty: str):
+        )""")
+
+def register(user_id: int, name: str, surname: str, study_group: str):
 
     with sqlite3.connect(DB_PATH) as db:
 
         c = db.cursor()
 
-        c.execute("INSERT OR REPLACE INTO users (user_id, name, surname, faculty) VALUES (?, ?, ?, ?)", (user_id, name, surname, faculty))
+        c.execute("INSERT OR REPLACE INTO users (user_id, name, surname, study_group) VALUES (?, ?, ?, ?)", (user_id, name, surname, study_group))
 
 
 def get_reg_data(user_id: int):
@@ -42,3 +41,12 @@ def get_reg_data(user_id: int):
             return result[0]
         else:
             return None
+
+
+def delete_data(user_id: int):
+
+    with sqlite3.connect(DB_PATH) as db:
+
+        c = db.cursor()
+
+        c.execute("DELETE FROM users WHERE user_id = ?", (user_id,))
