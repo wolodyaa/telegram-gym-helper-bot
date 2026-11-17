@@ -5,7 +5,7 @@ from aiogram import Dispatcher, Bot
 
 from app.handlers import router
 
-from config import TOKEN
+from assets.config import TOKEN
 from app.database import init_db
 
 

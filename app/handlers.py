@@ -1,12 +1,15 @@
 from aiogram import Router, F
-from aiogram.filters import CommandStart, Command
+from aiogram.filters import CommandStart
 
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
+ 
+from assets.exercise_data import EXERCISE_DATA
 
 import app.keyboards as kb
 import app.database as db
 import app.states as st
+
 
 
 router = Router()
@@ -63,9 +66,9 @@ async def register_end(message: Message, state: FSMContext):
     data = await state.get_data()
 
     await message.answer("Твое данные:\n"
-                         f"Имя: {data["name"]}.\n"
-                         f"Фамилия: {data["surname"]}.\n"
-                         f"Группа: {data["group"]}.\n"
+                         f"Имя: {data['name']}.\n"
+                         f"Фамилия: {data['surname']}.\n"
+                         f"Группа: {data['group']}.\n"
                          "Все данные указаны верно?",
                            reply_markup=kb.confirm)
     await state.set_state(st.Register.waiting_confirm)
@@ -75,15 +78,15 @@ async def register_end(message: Message, state: FSMContext):
 async def confirm_yes(callback: CallbackQuery, state: FSMContext):
     data = await state.get_data()
     await callback.message.edit_text("Твое данные cохранены как:\n"
-                             f"Имя: {data["name"]}.\n"
-                             f"Фамилия: {data["surname"]}.\n"
-                             f"Группа: {data["group"]}.\n"
+                             f"Имя: {data['name']}.\n"
+                             f"Фамилия: {data['surname']}.\n"
+                             f"Группа: {data['group']}.\n"
     )
 
     await callback.message.answer("Теперь ты можешь нажать кнопку снизу и выбрать упражнение",
                                    reply_markup=kb.main)
     
-    db.register(callback.from_user.id, data["name"], data["surname"], data["group"])
+    db.register(callback.from_user.id, data['name'], data['surname'], data['group'])
     await callback.answer()
     await state.clear()
 
@@ -99,9 +102,12 @@ async def confirm_no(callback: CallbackQuery, state: FSMContext):
 
 @router.message(F.text == "⚙️Настройки")
 async def settings(message: Message):
-    await message.answer("⚙️Настройки", reply_markup=kb.settings)
+    user_info = db.get_reg_data(message.from_user.id)
+    if not user_info:
+        await message.answer("Вы еще не зарегистрировались, пройдите регистрацию чтобы начать пользоваться ботом.", reply_markup=kb.register)
+    else:
+        await message.answer("⚙️Настройки", reply_markup=kb.settings)
     
-
 
 @router.callback_query(F.data =="delete_data")
 async def delete_data(callback: CallbackQuery, state: FSMContext):
@@ -126,3 +132,26 @@ async def confirm_delete_no(callback: CallbackQuery, state: FSMContext):
 
     await callback.answer()
     await state.clear()
+
+
+@router.message(F.text == "🏋️‍♂️Выбрать упражнение")
+async def choose_group(message: Message):
+    user_info = db.get_reg_data(message.from_user.id)
+    if not user_info:
+        await message.answer("Вы еще не зарегистрировались, пройдите регистрацию чтобы начать пользоваться ботом.", reply_markup=kb.register)
+    else:
+        await message.answer("Выберите группу мышц.", reply_markup=kb.exercises)
+
+
+@router.callback_query(F.data.startswith('ex_'))
+async def choose_exercises(callback: CallbackQuery):
+    text = EXERCISE_DATA.get(callback.data)
+
+    await callback.message.edit_text(text, reply_markup=kb.returns, parse_mode="HTML")
+    await callback.answer()
+
+
+@router.callback_query(F.data == "return")
+async def returns(callback: CallbackQuery):
+    await callback.message.edit_text("Выберите группу мышц.", reply_markup=kb.exercises)
+    await callback.answer()
