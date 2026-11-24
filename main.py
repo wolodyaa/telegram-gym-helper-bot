@@ -1,11 +1,9 @@
-import logging
-import asyncio
+import asyncio, logging
 
-from aiogram import Dispatcher, Bot
-
-from app.handlers import router
+from aiogram import Bot, Dispatcher
 
 from assets.config import TOKEN
+from app.handlers import router
 from app.database import init_db
 
 
@@ -18,8 +16,8 @@ async def main():
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
     try:
+        logging.basicConfig(level=logging.INFO)
         asyncio.run(main())
     except KeyboardInterrupt:
         print("Бот выключен.")
